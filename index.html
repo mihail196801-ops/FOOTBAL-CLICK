@@ -1,196 +1,62 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Море, попугаи и охотники!</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Скачущий попугай</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
     body {
       margin: 0;
-      height: 100vh;
+      padding: 0;
       overflow: hidden;
-      background: #f0f0f0;
+      background-color: #87CEEB; /* светло-голубой фон */
+      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-family: sans-serif;
-    }
-
-    #sun-ball {
-      width: 200px;
-      height: 200px;
-      background: radial-gradient(circle, #FFD700, #FFA500);
-      border-radius: 50%;
-      box-shadow: 0 0 40px rgba(255, 215, 0, 0.8);
-      cursor: pointer;
-      z-index: 100;
-    }
-
-    #beach-view {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: url('https://i.pinimg.com/originals/20/d2/8c/20d28c14b88195c4085fd5054f18c7ff.jpg');
-      background-size: cover;
-      background-position: center;
-      z-index: 1;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    .parrot, .hunter {
-      position: absolute;
-      font-size: 40px;
-      z-index: 2;
-      pointer-events: none;
     }
 
     .parrot {
-      animation: bounce 1.2s infinite alternate;
+      position: absolute;
+      font-size: 60px;
+      animation: bounce 2s infinite, move-around 8s infinite;
+      user-select: none;
     }
 
     @keyframes bounce {
-      0% { transform: translateY(0) rotate(0deg); }
-      100% { transform: translateY(-40px) rotate(10deg); }
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-40px);
+      }
+    }
+
+    @keyframes move-around {
+      0% {
+        left: 10%;
+        top: 20%;
+      }
+      25% {
+        left: 70%;
+        top: 10%;
+      }
+      50% {
+        left: 60%;
+        top: 60%;
+      }
+      75% {
+        left: 20%;
+        top: 70%;
+      }
+      100% {
+        left: 10%;
+        top: 20%;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Жёлтый шар -->
-  <div id="sun-ball"></div>
-
-  <!-- Фон с морем -->
-  <div id="beach-view"></div>
-
-  <!-- Аудио -->
-  <audio id="beachMusic" preload="auto">
-    <source src="https://www.soundjay.com/nature/sounds/tropical-birds-1.mp3" type="audio/mpeg">
-  </audio>
-
-  <script>
-    const sunBall = document.getElementById('sun-ball');
-    const beachView = document.getElementById('beach-view');
-    const audio = document.getElementById('beachMusic');
-    let musicPlayed = false;
-    let activeCharacters = [];
-
-    // Функция создания пары: попугай + охотник
-    function createParrotAndHunter(x, y) {
-      // Попугай
-      const parrot = document.createElement('div');
-      parrot.className = 'parrot';
-      parrot.textContent = '🦜';
-      parrot.style.left = (x - 20) + 'px';
-      parrot.style.top = (y - 20) + 'px';
-      document.body.appendChild(parrot);
-
-      // Охотник (человечек)
-      const hunter = document.createElement('div');
-      hunter.className = 'hunter';
-      hunter.textContent = '👤';
-      hunter.style.left = (x - 20) + 'px';
-      hunter.style.top = (y + 100) + 'px'; // Начинает ниже
-      document.body.appendChild(hunter);
-
-      // Случайное направление движения для попугая
-      let dx = (Math.random() - 0.5) * 4;
-      let dy = (Math.random() - 0.5) * 2;
-
-      // Сохраняем состояние
-      const state = { parrot, hunter, x, y, dx, dy };
-      activeCharacters.push(state);
-
-      // Удалим через 15 сек
-      setTimeout(() => {
-        if (parrot.parentNode) parrot.remove();
-        if (hunter.parentNode) hunter.remove();
-        const index = activeCharacters.indexOf(state);
-        if (index > -1) activeCharacters.splice(index, 1);
-      }, 15000);
-    }
-
-    // Обновление позиций (анимация преследования)
-    function animate() {
-      activeCharacters.forEach(char => {
-        const { parrot, hunter, dx, dy } = char;
-
-        // Двигаем попугая
-        let px = parseFloat(parrot.style.left) || 0;
-        let py = parseFloat(parrot.style.top) || 0;
-
-        // Отскок от краёв
-        if (px <= 0 || px >= window.innerWidth - 40) dx = -dx;
-        if (py <= 0 || py >= window.innerHeight - 80) dy = -dy;
-
-        px += dx;
-        py += dy;
-
-        parrot.style.left = px + 'px';
-        parrot.style.top = py + 'px';
-
-        // Обновляем координаты в состоянии
-        char.x = px;
-        char.y = py;
-        char.dx = dx;
-        char.dy = dy;
-
-        // Охотник следует за попугаем с задержкой (плавное преследование)
-        const hx = parseFloat(hunter.style.left) || 0;
-        const hy = parseFloat(hunter.style.top) || 0;
-        const targetX = px;
-        const targetY = py;
-
-        // Простая интерполяция (плавное следование)
-        const nx = hx + (targetX - hx) * 0.03;
-        const ny = hy + (targetY - hy) * 0.03;
-
-        hunter.style.left = nx + 'px';
-        hunter.style.top = ny + 'px';
-      });
-
-      requestAnimationFrame(animate);
-    }
-
-    // Запуск анимации
-    animate();
-
-    // Обработчик клика по шару
-    sunBall.addEventListener('click', function(e) {
-      sunBall.classList.add('hidden');
-      beachView.style.display = 'block';
-
-      if (!musicPlayed) {
-        audio.play().catch(() => console.log("Музыка не проигралась (возможно, блокировка браузера)"));
-        audio.loop = true;
-        musicPlayed = true;
-      }
-
-      // Создаём первую пару в центре
-      createParrotAndHunter(window.innerWidth / 2, window.innerHeight / 2);
-
-      // Добавим ещё пару через пару секунд для веселья
-      setTimeout(() => {
-        createParrotAndHunter(200, 300);
-      }, 2000);
-    });
-
-    // Дополнительно: клик по пляжу создаёт новых попугаев!
-    beachView.addEventListener('click', function(e) {
-      if (beachView.style.display === 'block') {
-        createParrotAndHunter(e.clientX, e.clientY);
-      }
-    });
-  </script>
+  <div class="parrot">🦜</div>
 </body>
 </html>
